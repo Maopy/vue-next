@@ -65,24 +65,24 @@ function getComponentTrace(): ComponentTraceStack {
   // we can't just use the stack because it will be incomplete during updates
   // that did not start from the root. Re-construct the parent chain using
   // instance parent pointers.
-  const normlaizedStack: ComponentTraceStack = []
+  const normalizedStack: ComponentTraceStack = []
 
   while (currentVNode) {
-    const last = normlaizedStack[0]
+    const last = normalizedStack[0]
     if (last && last.vnode === currentVNode) {
       last.recurseCount++
     } else {
-      normlaizedStack.push({
+      normalizedStack.push({
         vnode: currentVNode,
         recurseCount: 0
       })
     }
-    const parentInstance: ComponentInternalInstance | null = (currentVNode.component as ComponentInternalInstance)
+    const parentInstance: ComponentInternalInstance | null = currentVNode.component!
       .parent
     currentVNode = parentInstance && parentInstance.vnode
   }
 
-  return normlaizedStack
+  return normalizedStack
 }
 
 function formatTrace(trace: ComponentTraceStack): string[] {
@@ -107,10 +107,7 @@ function formatTraceEntry(
     recurseCount > 0 ? `... (${recurseCount} recursive calls)` : ``
   const open = padding + `<${formatComponentName(vnode)}`
   const close = `>` + postfix
-  const rootLabel =
-    (vnode.component as ComponentInternalInstance).parent == null
-      ? `(Root)`
-      : ``
+  const rootLabel = vnode.component!.parent == null ? `(Root)` : ``
   return vnode.props
     ? [open, ...formatProps(vnode.props), close, rootLabel]
     : [open + close, rootLabel]

@@ -1,7 +1,7 @@
 /*
-Produce prodcution builds and stitch toegether d.ts files.
+Produces production builds and stitches together d.ts files.
 
-To specific the package to build, simply pass its name and the desired build
+To specify the package to build, simply pass its name and the desired build
 formats to output (defaults to `buildOptions.formats` specified in that package,
 or "esm,cjs"):
 
@@ -29,6 +29,7 @@ const formats = args.formats || args.f
 const devOnly = args.devOnly || args.d
 const prodOnly = !devOnly && (args.prodOnly || args.p)
 const buildAllMatching = args.all || args.a
+const commit = execa.sync('git', ['rev-parse', 'HEAD']).stdout.slice(0, 7)
 ;(async () => {
   if (!targets.length) {
     await buildAll(allTargets)
@@ -60,11 +61,16 @@ async function build(target) {
     [
       '-c',
       '--environment',
-      `NODE_ENV:${env},` +
-        `TARGET:${target}` +
-        (formats ? `,FORMATS:${formats}` : ``) +
-        (args.types ? `,TYPES:true` : ``) +
-        (prodOnly ? `,PROD_ONLY:true` : ``)
+      [
+        `COMMIT:${commit}`,
+        `NODE_ENV:${env}`,
+        `TARGET:${target}`,
+        formats ? `FORMATS:${formats}` : ``,
+        args.types ? `TYPES:true` : ``,
+        prodOnly ? `PROD_ONLY:true` : ``
+      ]
+        .filter(_ => _)
+        .join(',')
     ],
     { stdio: 'inherit' }
   )

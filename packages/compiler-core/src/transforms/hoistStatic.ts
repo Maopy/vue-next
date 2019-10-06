@@ -9,7 +9,7 @@ import {
 import { TransformContext } from '../transform'
 import { APPLY_DIRECTIVES } from '../runtimeConstants'
 import { PropsExpression } from './transformElement'
-import { PatchFlags } from '@vue/runtime-dom'
+import { PatchFlags } from '@vue/shared'
 
 export function hoistStatic(root: RootNode, context: TransformContext) {
   walk(root.children, context, new Map<TemplateChildNode, boolean>())
@@ -35,7 +35,11 @@ function walk(
         // node may contain dynamic children, but its props may be eligible for
         // hoisting.
         const flag = getPatchFlag(child)
-        if (!flag || flag === PatchFlags.NEED_PATCH) {
+        if (
+          !flag ||
+          flag === PatchFlags.NEED_PATCH ||
+          flag === PatchFlags.TEXT
+        ) {
           let codegenNode = child.codegenNode as CallExpression
           if (codegenNode.callee.includes(APPLY_DIRECTIVES)) {
             codegenNode = codegenNode.arguments[0] as CallExpression

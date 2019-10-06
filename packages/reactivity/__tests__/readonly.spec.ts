@@ -106,7 +106,7 @@ describe('reactivity/readonly', () => {
 
   describe('Array', () => {
     it('should make nested values readonly', () => {
-      const original: any[] = [{ foo: 1 }]
+      const original = [{ foo: 1 }]
       const observed = readonly(original)
       expect(observed).not.toBe(original)
       expect(isReactive(observed)).toBe(true)
@@ -264,7 +264,7 @@ describe('reactivity/readonly', () => {
       })
 
       if (Collection === Map) {
-        test('should retrive readonly values on iteration', () => {
+        test('should retrieve readonly values on iteration', () => {
           const key1 = {}
           const key2 = {}
           const original = new Collection([[key1, {}], [key2, {}]])
@@ -334,7 +334,7 @@ describe('reactivity/readonly', () => {
       })
 
       if (Collection === Set) {
-        test('should retrive readonly values on iteration', () => {
+        test('should retrieve readonly values on iteration', () => {
           const original = new Collection([{}, {}])
           const observed: any = readonly(original)
           for (const value of observed) {

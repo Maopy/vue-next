@@ -1,16 +1,13 @@
 import { effect, ReactiveEffect, activeReactiveEffectStack } from './effect'
-import { UnwrapNestedRefs } from './ref'
+import { Ref, refSymbol, UnwrapNestedRefs } from './ref'
 import { isFunction } from '@vue/shared'
 
-export interface ComputedRef<T> {
-  _isRef: true
+export interface ComputedRef<T> extends Ref<T> {
   readonly value: UnwrapNestedRefs<T>
   readonly effect: ReactiveEffect
 }
 
-export interface WritableComputedRef<T> {
-  _isRef: true
-  value: UnwrapNestedRefs<T>
+export interface WritableComputedRef<T> extends Ref<T> {
   readonly effect: ReactiveEffect
 }
 
@@ -31,7 +28,9 @@ export function computed<T>(
     ? (getterOrOptions as (() => T))
     : (getterOrOptions as WritableComputedOptions<T>).get
   const setter = isReadonly
-    ? null
+    ? () => {
+        // TODO warn attempting to mutate readonly computed value
+      }
     : (getterOrOptions as WritableComputedOptions<T>).set
 
   let dirty: boolean = true
@@ -46,7 +45,7 @@ export function computed<T>(
     }
   })
   return {
-    _isRef: true,
+    _isRef: refSymbol,
     // expose effect so computed can be stopped
     effect: runner,
     get value() {
@@ -60,12 +59,8 @@ export function computed<T>(
       trackChildRun(runner)
       return value
     },
-    set value(newValue) {
-      if (setter) {
-        setter(newValue)
-      } else {
-        // TODO warn attempting to mutate readonly computed value
-      }
+    set value(newValue: T) {
+      setter(newValue)
     }
   }
 }
