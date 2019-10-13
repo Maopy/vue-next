@@ -1,10 +1,9 @@
 import { effect, ReactiveEffect, activeReactiveEffectStack } from './effect'
-import { Ref, refSymbol, UnwrapNestedRefs } from './ref'
-import { isFunction } from '@vue/shared'
+import { Ref, refSymbol, UnwrapRef } from './ref'
+import { isFunction, NOOP } from '@vue/shared'
 
-export interface ComputedRef<T> extends Ref<T> {
-  readonly value: UnwrapNestedRefs<T>
-  readonly effect: ReactiveEffect
+export interface ComputedRef<T> extends WritableComputedRef<T> {
+  readonly value: UnwrapRef<T>
 }
 
 export interface WritableComputedRef<T> extends Ref<T> {
@@ -28,13 +27,15 @@ export function computed<T>(
     ? (getterOrOptions as (() => T))
     : (getterOrOptions as WritableComputedOptions<T>).get
   const setter = isReadonly
-    ? () => {
-        // TODO warn attempting to mutate readonly computed value
-      }
+    ? __DEV__
+      ? () => {
+          console.warn('Write operation failed: computed value is readonly')
+        }
+      : NOOP
     : (getterOrOptions as WritableComputedOptions<T>).set
 
-  let dirty: boolean = true
-  let value: any = undefined
+  let dirty = true
+  let value: T
 
   const runner = effect(getter, {
     lazy: true,
@@ -45,7 +46,7 @@ export function computed<T>(
     }
   })
   return {
-    _isRef: refSymbol,
+    [refSymbol]: true,
     // expose effect so computed can be stopped
     effect: runner,
     get value() {
